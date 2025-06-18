@@ -1,70 +1,73 @@
-// Golub (pigeon) - sivo telo, oči, kljun
+// sprites.js
+
 function drawPigeon(ctx, x, y, scale = 1) {
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(scale, scale);
-  
-  // Telo
-  ctx.fillStyle = "#999";
+
+  // Telo goluba - svetlo sivo
+  ctx.fillStyle = "#bbb";
   ctx.beginPath();
-  ctx.ellipse(0, 0, 20, 15, 0, 0, Math.PI * 2);
-  ctx.fill();
-  
-  // Glava
-  ctx.beginPath();
-  ctx.ellipse(15, -10, 10, 10, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, 0, 20, 15, 0, 0, 2 * Math.PI);
   ctx.fill();
 
-  // Oči
+  // Glava - tamno sivo
+  ctx.fillStyle = "#888";
+  ctx.beginPath();
+  ctx.ellipse(15, -10, 10, 10, 0, 0, 2 * Math.PI);
+  ctx.fill();
+
+  // Oko - belo sa crnim
+  ctx.fillStyle = "#fff";
+  ctx.beginPath();
+  ctx.arc(18, -12, 5, 0, 2 * Math.PI);
+  ctx.fill();
+
   ctx.fillStyle = "#000";
   ctx.beginPath();
-  ctx.arc(18, -14, 4, 0, Math.PI * 2);
+  ctx.arc(18, -12, 2, 0, 2 * Math.PI);
   ctx.fill();
 
-  // Kljun
+  // Kljun - narandžasti trokut
   ctx.fillStyle = "#f90";
   ctx.beginPath();
   ctx.moveTo(25, -10);
-  ctx.lineTo(35, -7);
-  ctx.lineTo(25, -4);
+  ctx.lineTo(35, -8);
+  ctx.lineTo(25, -5);
+  ctx.closePath();
   ctx.fill();
 
   ctx.restore();
 }
 
-// Mrvica hleba - žuti okrugli kružić
 function drawBreadcrumb(ctx, x, y, scale = 1) {
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(scale, scale);
 
-  ctx.fillStyle = "#f5e06e"; // žuta boja
+  ctx.fillStyle = "#f4a261"; // boja hleba
   ctx.beginPath();
-  ctx.arc(0, 0, 6, 0, Math.PI * 2);
+  ctx.arc(0, 0, 6, 0, 2 * Math.PI);
   ctx.fill();
 
   ctx.restore();
 }
 
-// Prepreka - oblak (beli sa senkom)
-function drawObstacle(ctx, x, y, scale = 1) {
+function drawStory(ctx, x, y, scale = 1) {
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(scale, scale);
 
-  // Senka oblaka
-  ctx.fillStyle = "rgba(0,0,0,0.2)";
-  ctx.beginPath();
-  ctx.ellipse(20, 20, 25, 15, 0, 0, Math.PI * 2);
-  ctx.fill();
+  // Crvena prepreka kvadrat
+  ctx.fillStyle = "#d63031";
+  ctx.fillRect(-15, -15, 30, 30);
 
-  // Oblak glavni beli
+  // Slovo "P" za priču
   ctx.fillStyle = "#fff";
-  ctx.beginPath();
-  ctx.ellipse(10, 10, 25, 15, 0, 0, Math.PI * 2);
-  ctx.ellipse(30, 5, 20, 15, 0, 0, Math.PI * 2);
-  ctx.ellipse(40, 15, 25, 15, 0, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.font = "bold 20px Arial";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("P", 0, 0);
 
   ctx.restore();
 }
