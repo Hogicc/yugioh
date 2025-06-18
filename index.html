@@ -1,200 +1,135 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Yugi vs Kaiba</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #222;
-      color: #fff;
-      text-align: center;
-      padding: 20px;
-    }
-    .field {
-      display: flex;
-      justify-content: space-around;
-      margin: 20px 0;
-    }
-    .zone {
-      border: 2px solid #555;
-      padding: 10px;
-      min-width: 120px;
-      min-height: 80px;
-      background-color: #333;
-    }
-    .hand {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-top: 20px;
-    }
-    .card {
-      background-color: #444;
-      padding: 10px;
-      border: 1px solid #aaa;
-      cursor: pointer;
-    }
-    .disabled {
-      opacity: 0.5;
-      pointer-events: none;
-    }
-    button {
-      margin: 10px;
-      padding: 10px;
-      font-size: 16px;
-    }
-  </style>
+<meta charset="UTF-8" />
+<title>Pigeon Bread Collector</title>
+<style>
+  body {
+    margin: 0;
+    background: #87ceeb; /* plavo nebo */
+    overflow: hidden;
+  }
+  canvas {
+    display: block;
+    margin: auto;
+    background: #a3d9a5; /* zelena trava */
+  }
+  #score {
+    color: #222;
+    font-family: Arial, sans-serif;
+    font-size: 24px;
+    text-align: center;
+    margin: 10px;
+  }
+</style>
 </head>
 <body>
-  <h1>Yugi vs Kaiba (AI)</h1>
-  <h2>Life Points</h2>
-  <p>Yugi LP: <span id="yugi-lp">8000</span> | Kaiba LP: <span id="kaiba-lp">8000</span></p>
+<div id="score">Breadcrumbs collected: 0</div>
+<canvas id="game" width="800" height="400"></canvas>
 
-  <h3>Current Phase: <span id="phase">Draw Phase</span></h3>
+<script src="sprites.js"></script>
+<script>
+  const canvas = document.getElementById("game");
+  const ctx = canvas.getContext("2d");
 
-  <div class="field">
-    <div>
-      <h3>Kaiba's Field</h3>
-      <div id="kaiba-field" class="zone"></div>
-    </div>
-    <div>
-      <h3>Yugi's Field</h3>
-      <div id="yugi-field" class="zone"></div>
-    </div>
-  </div>
+  const pigeonSpeedX = 2;
+  const pigeonSpeedY = 4;
+  let pigeonY = canvas.height / 2;
+  let pigeonX = 50;
 
-  <h3>Your Hand</h3>
-  <div id="hand" class="hand"></div>
+  let upPressed = false;
+  let downPressed = false;
 
-  <button onclick="nextPhase()">Next Phase</button>
+  let breadcrumbs = [];
+  let collected = 0;
 
-  <script>
-    const yugiDeck = [
-      { name: "Dark Magician", atk: 2500 },
-      { name: "Celtic Guardian", atk: 1400 },
-      { name: "Kuriboh", atk: 300 },
-      { name: "Summoned Skull", atk: 2500 },
-      { name: "Gaia The Fierce Knight", atk: 2300 }
-    ];
-
-    const kaibaDeck = [
-      { name: "Blue-Eyes White Dragon", atk: 3000 },
-      { name: "Battle Ox", atk: 1700 },
-      { name: "Vorcerader", atk: 1900 },
-      { name: "Rude Kaiser", atk: 1800 },
-      { name: "Saggi the Dark Clown", atk: 600 }
-    ];
-
-    let yugiLP = 8000;
-    let kaibaLP = 8000;
-    let currentPhase = 0;
-    const phases = ["Draw Phase", "Main Phase 1", "Battle Phase", "End Phase"];
-    const hand = [];
-
-    const handDiv = document.getElementById("hand");
-    const yugiField = document.getElementById("yugi-field");
-    const kaibaField = document.getElementById("kaiba-field");
-    const yugiLPSpan = document.getElementById("yugi-lp");
-    const kaibaLPSpan = document.getElementById("kaiba-lp");
-    const phaseSpan = document.getElementById("phase");
-
-    function drawCard() {
-      if (yugiDeck.length > 0) {
-        const card = yugiDeck.shift();
-        hand.push(card);
-        renderHand();
-      }
+  // Pravljenje mrvica u random Y pozicijama, na rastojanju u X
+  function createBreadcrumbs() {
+    breadcrumbs = [];
+    let startX = 300;
+    for (let i = 0; i < 10; i++) {
+      let x = startX + i * 120;
+      let y = Math.random() * (canvas.height - 20) + 10;
+      breadcrumbs.push({ x, y, size: 10 });
     }
+  }
 
-    function renderHand() {
-      handDiv.innerHTML = "";
-      hand.forEach((card, index) => {
-        const cardDiv = document.createElement("div");
-        cardDiv.className = "card";
-        cardDiv.innerText = `${card.name}\nATK: ${card.atk}`;
-        cardDiv.onclick = () => summonCard(index);
-        handDiv.appendChild(cardDiv);
-      });
-    }
+  createBreadcrumbs();
 
-    function summonCard(index) {
-      const card = hand.splice(index, 1)[0];
-      const cardDiv = document.createElement("div");
-      cardDiv.className = "card";
-      cardDiv.innerText = `${card.name}\nATK: ${card.atk}`;
-      cardDiv.dataset.atk = card.atk;
-      yugiField.innerHTML = "";
-      yugiField.appendChild(cardDiv);
-      renderHand();
-    }
+  // Resetovanje igre
+  function resetGame() {
+    pigeonY = canvas.height / 2;
+    pigeonX = 50;
+    collected = 0;
+    createBreadcrumbs();
+    document.getElementById("score").textContent = "Breadcrumbs collected: 0";
+  }
 
-    function kaibaTurn() {
-      if (kaibaDeck.length === 0) return;
-      const card = kaibaDeck.shift();
-      const cardDiv = document.createElement("div");
-      cardDiv.className = "card";
-      cardDiv.innerText = `${card.name}\nATK: ${card.atk}`;
-      cardDiv.dataset.atk = card.atk;
-      kaibaField.innerHTML = "";
-      kaibaField.appendChild(cardDiv);
-    }
-
-    function battlePhase() {
-      const yugiCard = yugiField.querySelector(".card");
-      const kaibaCard = kaibaField.querySelector(".card");
-
-      if (yugiCard && kaibaCard) {
-        const yugiATK = parseInt(yugiCard.dataset.atk);
-        const kaibaATK = parseInt(kaibaCard.dataset.atk);
-        if (yugiATK > kaibaATK) {
-          const damage = yugiATK - kaibaATK;
-          kaibaLP -= damage;
-          kaibaLPSpan.textContent = kaibaLP;
-          kaibaField.innerHTML = "";
-          alert("Yugi wins the battle and inflicts " + damage + " damage!");
-        } else if (kaibaATK > yugiATK) {
-          const damage = kaibaATK - yugiATK;
-          yugiLP -= damage;
-          yugiLPSpan.textContent = yugiLP;
-          yugiField.innerHTML = "";
-          alert("Kaiba wins the battle and inflicts " + damage + " damage!");
-        } else {
-          yugiField.innerHTML = "";
-          kaibaField.innerHTML = "";
-          alert("Both monsters destroyed!");
+  // Provera sudara goluba i mrvica
+  function checkCollision() {
+    for (let i = 0; i < breadcrumbs.length; i++) {
+      let b = breadcrumbs[i];
+      let distX = Math.abs(pigeonX - b.x);
+      let distY = Math.abs(pigeonY - b.y);
+      if (distX < 25 && distY < 25) {
+        breadcrumbs.splice(i, 1);
+        collected++;
+        document.getElementById("score").textContent = "Breadcrumbs collected: " + collected;
+        // Resetuj igru ako pokupiš sve
+        if (collected === 10) {
+          alert("Bravo! Pokupio si sve mrvice. Igra se resetuje.");
+          resetGame();
         }
+        break;
       }
     }
+  }
 
-    function nextPhase() {
-      currentPhase = (currentPhase + 1) % phases.length;
-      const phase = phases[currentPhase];
-      phaseSpan.textContent = phase;
+  // Event listeneri za strelice
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowUp") upPressed = true;
+    if (e.key === "ArrowDown") downPressed = true;
+  });
+  window.addEventListener("keyup", (e) => {
+    if (e.key === "ArrowUp") upPressed = false;
+    if (e.key === "ArrowDown") downPressed = false;
+  });
 
-      if (phase === "Draw Phase") {
-        drawCard();
-      } else if (phase === "Main Phase 1") {
-        kaibaTurn();
-      } else if (phase === "Battle Phase") {
-        battlePhase();
-      } else if (phase === "End Phase") {
-        checkWin();
-      }
+  // Glavna petlja igre
+  function gameLoop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Pomeri goluba gore/dole ako je pritisnuta strelica
+    if (upPressed && pigeonY > 0) {
+      pigeonY -= pigeonSpeedY;
+    }
+    if (downPressed && pigeonY < canvas.height - 30) {
+      pigeonY += pigeonSpeedY;
     }
 
-    function checkWin() {
-      if (yugiLP <= 0) {
-        alert("Kaiba wins!");
-        location.reload();
-      } else if (kaibaLP <= 0) {
-        alert("Yugi wins!");
-        location.reload();
-      }
+    // Golub ide stalno udesno
+    pigeonX += pigeonSpeedX;
+
+    // Ako golub izleti van ekrana desno, resetuj na levu stranu
+    if (pigeonX > canvas.width + 50) {
+      pigeonX = -50;
     }
 
-    // Start game with one draw
-    drawCard();
-  </script>
+    // Crtaj goluba i mrvice
+    drawPigeon(ctx, pigeonX, pigeonY, 1);
+
+    breadcrumbs.forEach(b => {
+      drawBreadcrumb(ctx, b.x, b.y, 1);
+    });
+
+    checkCollision();
+
+    requestAnimationFrame(gameLoop);
+  }
+
+  // Početak igre
+  resetGame();
+  gameLoop();
+</script>
 </body>
 </html>
