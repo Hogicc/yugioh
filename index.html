@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Pigeon Bread Collector - Continuous</title>
+<title>Pigeon Bread Collector - Stable</title>
 <style>
   body {
     margin: 0;
@@ -34,68 +34,66 @@
 
   const pigeonSpeedX = 2;
   const pigeonSpeedY = 4;
-  let pigeonY = canvas.height / 2;
   let pigeonX = 50;
+  let pigeonY = canvas.height / 2;
 
   let upPressed = false;
   let downPressed = false;
 
-  // MRVICE
   let breadcrumbs = [];
   let collected = 0;
 
-  // PRICE (prepreke)
   let stories = [];
 
-  // Kreiranje 5 mrvica u random visini i rasporedu u X (NE POMERAJU SE)
+  // Funkcija za pravljenje 5 mrvica na random pozicijama (koje se NE pomeraju)
   function createBreadcrumbs() {
     breadcrumbs = [];
     let startX = 300;
-    for (let i = 0; i < 5; i++) {
-      let x = startX + i * 140;
-      let y = Math.random() * (canvas.height - 20) + 10;
-      breadcrumbs.push({ x, y, size: 10 });
+    for(let i = 0; i < 5; i++) {
+      let x = startX + i * 140 + Math.random() * 30; // malo varijacije u x
+      let y = 20 + Math.random() * (canvas.height - 40);
+      breadcrumbs.push({x, y, size: 10});
     }
   }
 
-  // Kreiranje prepreka - više prepreka i sa rastućom brzinom
+  // Funkcija za pravljenje pokretnih prepreka/prica, 3+ prepreke koje se kreću različitim brzinama i visinama
   function createStories() {
     stories = [];
-    let numStories = 3 + Math.floor(collected / 10); // što više mrvice, to više prepreka
-    for (let i = 0; i < numStories; i++) {
-      let x = canvas.width + i * 200 + Math.random() * 100;
-      let y = Math.random() * (canvas.height - 40) + 20;
-      let speed = 2 + collected * 0.15 + Math.random(); // brzina raste sa brojem prikupljenih mrvica
-      stories.push({ x, y, size: 20, dir: -1, speed });
+    let count = 3 + Math.floor(collected / 10); // više prepreka kako raste broj skupljenih
+    for(let i = 0; i < count; i++) {
+      let x = canvas.width + i * 220 + Math.random() * 150;
+      let y = 30 + Math.random() * (canvas.height - 60);
+      let speed = 2 + Math.random() * 2 + collected * 0.1; // brže kako raste broj mrvica
+      stories.push({x, y, size: 20, dir: -1, speed});
     }
   }
 
-  createBreadcrumbs();
-  createStories();
-
+  // Reset cele igre na početne vrednosti
   function resetGame() {
-    pigeonY = canvas.height / 2;
     pigeonX = 50;
+    pigeonY = canvas.height / 2;
     collected = 0;
     createBreadcrumbs();
     createStories();
-    document.getElementById("score").textContent = "Breadcrumbs collected: 0";
+    updateScore();
   }
 
-  // Provera sudara goluba i mrvica/prepreka
+  function updateScore() {
+    document.getElementById("score").textContent = "Breadcrumbs collected: " + collected;
+  }
+
+  // Provera sudara goluba sa mrvicama ili preprekama
   function checkCollision() {
     // Sudar sa mrvicama
-    for (let i = 0; i < breadcrumbs.length; i++) {
+    for(let i = 0; i < breadcrumbs.length; i++) {
       let b = breadcrumbs[i];
       let distX = Math.abs(pigeonX - b.x);
       let distY = Math.abs(pigeonY - b.y);
-      if (distX < 25 && distY < 25) {
+      if(distX < 25 && distY < 25) {
         breadcrumbs.splice(i, 1);
         collected++;
-        document.getElementById("score").textContent = "Breadcrumbs collected: " + collected;
-
-        // Svaki put kad pokupi 5 novih mrvica, napravi ih opet 5 novih
-        if (collected % 5 === 0) {
+        updateScore();
+        if(collected % 5 === 0) {
           createBreadcrumbs();
           createStories();
         }
@@ -103,11 +101,11 @@
       }
     }
 
-    // Sudar sa preprekom (pričom)
-    for (let story of stories) {
+    // Sudar sa preprekama (pričama)
+    for(let story of stories) {
       let distX = Math.abs(pigeonX - story.x);
       let distY = Math.abs(pigeonY - story.y);
-      if (distX < 25 && distY < 25) {
+      if(distX < 25 && distY < 25) {
         alert("Dotakao si prepreku! Igra se resetuje.");
         resetGame();
         break;
@@ -115,47 +113,46 @@
     }
   }
 
-  // Event listeneri za kontrole strelicama
+  // Kontrole strelica
   window.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowUp") upPressed = true;
-    if (e.key === "ArrowDown") downPressed = true;
+    if(e.key === "ArrowUp") upPressed = true;
+    if(e.key === "ArrowDown") downPressed = true;
   });
+
   window.addEventListener("keyup", (e) => {
-    if (e.key === "ArrowUp") upPressed = false;
-    if (e.key === "ArrowDown") downPressed = false;
+    if(e.key === "ArrowUp") upPressed = false;
+    if(e.key === "ArrowDown") downPressed = false;
   });
 
   function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    if (upPressed && pigeonY > 0) {
-      pigeonY -= pigeonSpeedY;
-    }
-    if (downPressed && pigeonY < canvas.height - 30) {
-      pigeonY += pigeonSpeedY;
-    }
+    // Pomeranje goluba gore-dole
+    if(upPressed && pigeonY > 0) pigeonY -= pigeonSpeedY;
+    if(downPressed && pigeonY < canvas.height - 30) pigeonY += pigeonSpeedY;
 
+    // Golub ide stalno desno i "wrappuje" ekran
     pigeonX += pigeonSpeedX;
-    if (pigeonX > canvas.width + 50) {
+    if(pigeonX > canvas.width + 50) {
       pigeonX = -50;
     }
 
     drawPigeon(ctx, pigeonX, pigeonY, 1);
 
-    // Crtanje mrvica (NE POMERAJU SE)
+    // Crtanje mrvica (stacionarne)
     breadcrumbs.forEach(b => {
       drawBreadcrumb(ctx, b.x, b.y, 1);
     });
 
-    // Pomeri i iscrtaj prepreke
-    for (let story of stories) {
+    // Pomeranje i crtanje prepreka
+    stories.forEach(story => {
       story.x += story.dir * story.speed;
-      if (story.x < -50) {
-        story.x = canvas.width + Math.random() * 100;
-        story.y = Math.random() * (canvas.height - 40) + 20;
+      if(story.x < -50) {
+        story.x = canvas.width + Math.random() * 150;
+        story.y = 30 + Math.random() * (canvas.height - 60);
       }
       drawStory(ctx, story.x, story.y, 1);
-    }
+    });
 
     checkCollision();
 
@@ -164,6 +161,7 @@
 
   resetGame();
   gameLoop();
+
 </script>
 </body>
 </html>
