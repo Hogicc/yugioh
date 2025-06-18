@@ -1,66 +1,70 @@
-// sprites.js
-
-// Funkcija koja crta goluba na canvas 2D context
-// x, y - pozicija; scale - veličina; ctx - canvas context
+// Golub (pigeon) - sivo telo, oči, kljun
 function drawPigeon(ctx, x, y, scale = 1) {
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(scale, scale);
+  
+  // Telo
+  ctx.fillStyle = "#999";
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 20, 15, 0, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Glava
+  ctx.beginPath();
+  ctx.ellipse(15, -10, 10, 10, 0, 0, Math.PI * 2);
+  ctx.fill();
 
-  // crtanje goluba - pixel art stil
-  // telo
-  ctx.fillStyle = "#b0b0b0"; 
-  ctx.fillRect(0, 10, 40, 20); // telo
-
-  // glava
-  ctx.fillStyle = "#c0c0c0";
-  ctx.fillRect(35, 5, 15, 15);
-
-  // oko
+  // Oči
   ctx.fillStyle = "#000";
-  ctx.fillRect(45, 10, 5, 5);
+  ctx.beginPath();
+  ctx.arc(18, -14, 4, 0, Math.PI * 2);
+  ctx.fill();
 
-  // krila
-  ctx.fillStyle = "#909090";
-  ctx.fillRect(10, 5, 25, 10);
-
-  // rep
-  ctx.fillStyle = "#808080";
-  ctx.fillRect(-10, 15, 10, 10);
+  // Kljun
+  ctx.fillStyle = "#f90";
+  ctx.beginPath();
+  ctx.moveTo(25, -10);
+  ctx.lineTo(35, -7);
+  ctx.lineTo(25, -4);
+  ctx.fill();
 
   ctx.restore();
 }
 
-// Funkcija koja crta mrvicu hleba (mrvice) - mala žuta kvadratić
+// Mrvica hleba - žuti okrugli kružić
 function drawBreadcrumb(ctx, x, y, scale = 1) {
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(scale, scale);
 
-  ctx.fillStyle = "#f5d76e"; // žuta boja hleba
-  ctx.fillRect(0, 0, 10, 10);
-
-  // dodajemo male detalje (npr tačke)
-  ctx.fillStyle = "#e1b12c";
-  ctx.fillRect(2, 2, 2, 2);
-  ctx.fillRect(6, 6, 2, 2);
+  ctx.fillStyle = "#f5e06e"; // žuta boja
+  ctx.beginPath();
+  ctx.arc(0, 0, 6, 0, Math.PI * 2);
+  ctx.fill();
 
   ctx.restore();
 }
-// postojeće funkcije: drawPigeon, drawBreadcrumb ...
 
-// nova funkcija za crtanje priča
-function drawStory(ctx, x, y, scale = 1) {
+// Prepreka - oblak (beli sa senkom)
+function drawObstacle(ctx, x, y, scale = 1) {
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(scale, scale);
 
-  ctx.fillStyle = "#d63031";
-  ctx.fillRect(0, 0, 20, 20);
+  // Senka oblaka
+  ctx.fillStyle = "rgba(0,0,0,0.2)";
+  ctx.beginPath();
+  ctx.ellipse(20, 20, 25, 15, 0, 0, Math.PI * 2);
+  ctx.fill();
 
+  // Oblak glavni beli
   ctx.fillStyle = "#fff";
-  ctx.font = "16px Arial";
-  ctx.fillText("P", 5, 16);
+  ctx.beginPath();
+  ctx.ellipse(10, 10, 25, 15, 0, 0, Math.PI * 2);
+  ctx.ellipse(30, 5, 20, 15, 0, 0, Math.PI * 2);
+  ctx.ellipse(40, 15, 25, 15, 0, 0, Math.PI * 2);
+  ctx.fill();
 
   ctx.restore();
 }
