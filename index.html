@@ -50,8 +50,8 @@
     let startX = 200;
     for (let i = 0; i < 5; i++) {
       let x = startX + i * 120;
-      let y = Math.random() * (canvas.height - 20) + 10;
-      breadcrumbs.push({ x, y, size: 10 });
+      let y = Math.random() * (canvas.height - 40) + 20; // više prostora zbog veće veličine
+      breadcrumbs.push({ x, y, size: 20 }); // veličina 20 umesto 10
     }
   }
 
@@ -75,7 +75,7 @@
       let b = breadcrumbs[i];
       let distX = Math.abs(pigeonX - b.x);
       let distY = Math.abs(pigeonY - b.y);
-      if (distX < 25 && distY < 25) {
+      if (distX < 35 && distY < 35) {  // povećana distanca za koliziju zbog većih mrvica
         breadcrumbs.splice(i, 1);
         collected++;
         document.getElementById("score").textContent = "Breadcrumbs collected: " + collected;
@@ -117,9 +117,9 @@
     pigeonX += pigeonSpeedX;
     if (pigeonX > canvas.width + 50) pigeonX = -50;
 
-    drawPigeon(ctx, pigeonX, pigeonY, 2); // <- uvećan golub (scale 2)
+    drawPigeon(ctx, pigeonX, pigeonY, 2); // uvećan golub (scale 2)
 
-    breadcrumbs.forEach(b => drawBreadcrumb(ctx, b.x, b.y, 1));
+    breadcrumbs.forEach(b => drawBreadcrumb(ctx, b.x, b.y, 2)); // veće mrvice, skala 2
 
     for (let story of stories) {
       story.x += story.dir * story.speed;
