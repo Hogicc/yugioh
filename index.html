@@ -40,43 +40,38 @@
   let upPressed = false;
   let downPressed = false;
 
+  // MRVICE
   let breadcrumbs = [];
   let collected = 0;
 
+  // PRICE (prepreke)
   let stories = [];
 
-  // Kreira 5 mrvica u nasumičnoj visini i sa dovoljno razmaka u X, pomereno ka desnoj strani da se vidi
+  // Kreiranje 5 mrvica u random visini i rasporedu u X (NE POMERAJU SE)
   function createBreadcrumbs() {
     breadcrumbs = [];
-    let startX = canvas.width + 100; // kreću van platna, da se pojavljuju prirodno sa desne strane
+    let startX = 300;
     for (let i = 0; i < 5; i++) {
-      let x = startX + i * 160; // povećan razmak da ne budu preblizu
-      let y = Math.random() * (canvas.height - 40) + 20; // sigurno unutar platna, sa marginama
+      let x = startX + i * 140;
+      let y = Math.random() * (canvas.height - 20) + 10;
       breadcrumbs.push({ x, y, size: 10 });
     }
   }
 
-  // Dodaj dodatnih n mrvica, koristi se kad pokupiš 5
-  function addMoreBreadcrumbs(n) {
-    let maxX = breadcrumbs.length ? Math.max(...breadcrumbs.map(b => b.x)) : canvas.width;
-    for (let i = 1; i <= n; i++) {
-      let x = maxX + i * 160 + Math.random() * 50; // dodatni random pomak da nije linearno
-      let y = Math.random() * (canvas.height - 40) + 20;
-      breadcrumbs.push({ x, y, size: 10 });
-    }
-  }
-
-  // Kreira prepreke koje se kreću, brzina raste sa brojem skupljenih mrvica
+  // Kreiranje prepreka - više prepreka i sa rastućom brzinom
   function createStories() {
     stories = [];
-    let numStories = 2 + Math.floor(collected / 10); // više prepreka kako skupljaš više
+    let numStories = 3 + Math.floor(collected / 10); // što više mrvice, to više prepreka
     for (let i = 0; i < numStories; i++) {
-      let x = canvas.width + i * 250 + Math.random() * 100; 
+      let x = canvas.width + i * 200 + Math.random() * 100;
       let y = Math.random() * (canvas.height - 40) + 20;
-      let speed = 1 + collected * 0.1 + Math.random(); // brzina raste sa progresom
+      let speed = 2 + collected * 0.15 + Math.random(); // brzina raste sa brojem prikupljenih mrvica
       stories.push({ x, y, size: 20, dir: -1, speed });
     }
   }
+
+  createBreadcrumbs();
+  createStories();
 
   function resetGame() {
     pigeonY = canvas.height / 2;
@@ -87,8 +82,9 @@
     document.getElementById("score").textContent = "Breadcrumbs collected: 0";
   }
 
+  // Provera sudara goluba i mrvica/prepreka
   function checkCollision() {
-    // Mrvice
+    // Sudar sa mrvicama
     for (let i = 0; i < breadcrumbs.length; i++) {
       let b = breadcrumbs[i];
       let distX = Math.abs(pigeonX - b.x);
@@ -98,26 +94,28 @@
         collected++;
         document.getElementById("score").textContent = "Breadcrumbs collected: " + collected;
 
+        // Svaki put kad pokupi 5 novih mrvica, napravi ih opet 5 novih
         if (collected % 5 === 0) {
-          addMoreBreadcrumbs(5);
-          createStories(); // rekreiraj prepreke sa većom težinom
+          createBreadcrumbs();
+          createStories();
         }
         break;
       }
     }
 
-    // Priče (prepreke)
+    // Sudar sa preprekom (pričom)
     for (let story of stories) {
       let distX = Math.abs(pigeonX - story.x);
       let distY = Math.abs(pigeonY - story.y);
       if (distX < 25 && distY < 25) {
-        alert("Dotakao si priču! Igra se resetuje.");
+        alert("Dotakao si prepreku! Igra se resetuje.");
         resetGame();
         break;
       }
     }
   }
 
+  // Event listeneri za kontrole strelicama
   window.addEventListener("keydown", (e) => {
     if (e.key === "ArrowUp") upPressed = true;
     if (e.key === "ArrowDown") downPressed = true;
@@ -144,18 +142,17 @@
 
     drawPigeon(ctx, pigeonX, pigeonY, 1);
 
+    // Crtanje mrvica (NE POMERAJU SE)
     breadcrumbs.forEach(b => {
-      // Pomeri mrvice ulevo da izgledaju kao da dolaze
-      b.x -= pigeonSpeedX;
       drawBreadcrumb(ctx, b.x, b.y, 1);
     });
 
-    // Pomeri priče ulevo i iscrtaj ih
+    // Pomeri i iscrtaj prepreke
     for (let story of stories) {
       story.x += story.dir * story.speed;
       if (story.x < -50) {
-        story.x = canvas.width + Math.random() * 100; // nasumično sa desne strane
-        story.y = Math.random() * (canvas.height - 40) + 20; // nova Y pozicija
+        story.x = canvas.width + Math.random() * 100;
+        story.y = Math.random() * (canvas.height - 40) + 20;
       }
       drawStory(ctx, story.x, story.y, 1);
     }
