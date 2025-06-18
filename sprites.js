@@ -1,73 +1,66 @@
 // sprites.js
 
+// Funkcija koja crta goluba na canvas 2D context
+// x, y - pozicija; scale - veličina; ctx - canvas context
 function drawPigeon(ctx, x, y, scale = 1) {
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(scale, scale);
 
-  // Telo goluba - svetlo sivo
-  ctx.fillStyle = "#bbb";
-  ctx.beginPath();
-  ctx.ellipse(0, 0, 20, 15, 0, 0, 2 * Math.PI);
-  ctx.fill();
+  // crtanje goluba - pixel art stil
+  // telo
+  ctx.fillStyle = "#b0b0b0"; 
+  ctx.fillRect(0, 10, 40, 20); // telo
 
-  // Glava - tamno sivo
-  ctx.fillStyle = "#888";
-  ctx.beginPath();
-  ctx.ellipse(15, -10, 10, 10, 0, 0, 2 * Math.PI);
-  ctx.fill();
+  // glava
+  ctx.fillStyle = "#c0c0c0";
+  ctx.fillRect(35, 5, 15, 15);
 
-  // Oko - belo sa crnim
-  ctx.fillStyle = "#fff";
-  ctx.beginPath();
-  ctx.arc(18, -12, 5, 0, 2 * Math.PI);
-  ctx.fill();
-
+  // oko
   ctx.fillStyle = "#000";
-  ctx.beginPath();
-  ctx.arc(18, -12, 2, 0, 2 * Math.PI);
-  ctx.fill();
+  ctx.fillRect(45, 10, 5, 5);
 
-  // Kljun - narandžasti trokut
-  ctx.fillStyle = "#f90";
-  ctx.beginPath();
-  ctx.moveTo(25, -10);
-  ctx.lineTo(35, -8);
-  ctx.lineTo(25, -5);
-  ctx.closePath();
-  ctx.fill();
+  // krila
+  ctx.fillStyle = "#909090";
+  ctx.fillRect(10, 5, 25, 10);
+
+  // rep
+  ctx.fillStyle = "#808080";
+  ctx.fillRect(-10, 15, 10, 10);
 
   ctx.restore();
 }
 
+// Funkcija koja crta mrvicu hleba (mrvice) - mala žuta kvadratić
 function drawBreadcrumb(ctx, x, y, scale = 1) {
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(scale, scale);
 
-  ctx.fillStyle = "#f4a261"; // boja hleba
-  ctx.beginPath();
-  ctx.arc(0, 0, 6, 0, 2 * Math.PI);
-  ctx.fill();
+  ctx.fillStyle = "#f5d76e"; // žuta boja hleba
+  ctx.fillRect(0, 0, 10, 10);
+
+  // dodajemo male detalje (npr tačke)
+  ctx.fillStyle = "#e1b12c";
+  ctx.fillRect(2, 2, 2, 2);
+  ctx.fillRect(6, 6, 2, 2);
 
   ctx.restore();
 }
-
+// Crtaj "priču" (npr. mali crveni kvadratić sa belim slovom P)
 function drawStory(ctx, x, y, scale = 1) {
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(scale, scale);
 
-  // Crvena prepreka kvadrat
-  ctx.fillStyle = "#d63031";
-  ctx.fillRect(-15, -15, 30, 30);
+  // telo
+  ctx.fillStyle = "#d63031"; // crvena
+  ctx.fillRect(0, 0, 20, 20);
 
-  // Slovo "P" za priču
+  // slovo P u beloj boji
   ctx.fillStyle = "#fff";
-  ctx.font = "bold 20px Arial";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("P", 0, 0);
+  ctx.font = "16px Arial";
+  ctx.fillText("P", 5, 16);
 
   ctx.restore();
 }
