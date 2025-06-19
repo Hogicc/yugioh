@@ -160,7 +160,12 @@
           breadcrumbs.splice(i, 1);
           document.getElementById("score").textContent = "Breadcrumbs collected: " + collected;
 
-          if (breadcrumbs.length === 0) createBreadcrumbs();
+          const remainingNormal = breadcrumbs.filter(b => b.type === "normal").length;
+          if (remainingNormal === 0) {
+            breadcrumbs = breadcrumbs.filter(b => b.type !== "bad");
+            createBreadcrumbs();
+          }
+
           updateStories();
           break;
         }
