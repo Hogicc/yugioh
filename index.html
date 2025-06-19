@@ -15,7 +15,7 @@
       margin: auto;
       background: #a3d9a5;
     }
-    #menu, #score, #timer, #currency {
+    #menu, #score, #timer {
       text-align: center;
       margin: 10px;
     }
@@ -34,7 +34,7 @@
 </head>
 <body>
   <div id="menu">
-    <div id="currency">Collected breadcrumbs: 0</div>
+    <p id="totalDisplay">Collected breadcrumbs: 0</p>
     <button class="btn" onclick="showDifficulty()">Play</button>
     <div id="difficulty" style="display:none;">
       <button class="btn" onclick="startGame('easy')">Easy</button>
@@ -61,7 +61,7 @@
 
     let breadcrumbs = [];
     let collected = 0;
-    let totalCollected = 0;
+    let totalCollected = parseInt(localStorage.getItem("totalCollected")) || 0;
     let stories = [];
     let clouds = [
       { x: 100, y: 60 }, { x: 300, y: 90 },
@@ -155,9 +155,17 @@
         let distX = Math.abs(pigeonX - b.x);
         let distY = Math.abs(pigeonY - b.y);
         if (distX < 25 && distY < 25) {
-          if (b.type === "bad") collected = Math.max(0, collected - 3);
-          else if (b.type === "gold") collected += 5;
-          else collected++;
+          if (b.type === "bad") {
+            collected = Math.max(0, collected - 3);
+          } else if (b.type === "gold") {
+            collected += 5;
+            totalCollected += 5;
+            localStorage.setItem("totalCollected", totalCollected);
+          } else {
+            collected++;
+            totalCollected++;
+            localStorage.setItem("totalCollected", totalCollected);
+          }
 
           breadcrumbs.splice(i, 1);
           document.getElementById("score").textContent = "Breadcrumbs collected: " + collected;
@@ -177,32 +185,31 @@
         let distX = Math.abs(pigeonX - story.x);
         let distY = Math.abs(pigeonY - story.y);
         if (distX < 25 && distY < 25) {
-          endGame();
+          alert("Dotakao si priču! Igra se resetuje.");
+          clearInterval(timerInterval);
+          showMenu();
           return;
         }
       }
 
       if (mode !== "easy" && timer <= 0) {
-        endGame();
+        alert("Vreme je isteklo!");
+        clearInterval(timerInterval);
+        showMenu();
       }
 
       if (mode === "hard" && collected >= 80) {
         alert("Pobeda! Sakupio si 80 mrvica!");
-        endGame();
+        clearInterval(timerInterval);
+        showMenu();
       }
-    }
-
-    function endGame() {
-      totalCollected += collected;
-      document.getElementById("currency").textContent = "Collected breadcrumbs: " + totalCollected;
-      clearInterval(timerInterval);
-      showMenu();
     }
 
     function showMenu() {
       document.getElementById("menu").style.display = "block";
       document.getElementById("score").style.display = "none";
       document.getElementById("timer").style.display = "none";
+      document.getElementById("totalDisplay").textContent = "Collected breadcrumbs: " + totalCollected;
       cancelAnimationFrame(animationId);
     }
 
