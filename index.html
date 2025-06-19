@@ -102,7 +102,7 @@
           if (rand < 0.1) type = "bad";
           else if (rand > 0.9) type = "gold";
         }
-        breadcrumbs.push({ x, y, size: 20, type });
+        breadcrumbs.push({ x, y, size: 10, type });
       }
     }
 
@@ -152,7 +152,7 @@
         let b = breadcrumbs[i];
         let distX = Math.abs(pigeonX - b.x);
         let distY = Math.abs(pigeonY - b.y);
-        if (distX < 35 && distY < 35) {
+        if (distX < 25 && distY < 25) {
           if (b.type === "bad") collected = Math.max(0, collected - 3);
           else if (b.type === "gold") collected += 5;
           else collected++;
@@ -160,7 +160,7 @@
           breadcrumbs.splice(i, 1);
           document.getElementById("score").textContent = "Breadcrumbs collected: " + collected;
 
-          if (collected % 5 === 0) createBreadcrumbs();
+          if (breadcrumbs.length === 0) createBreadcrumbs();
           updateStories();
           break;
         }
