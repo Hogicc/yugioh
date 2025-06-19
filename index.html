@@ -6,13 +6,13 @@
 <style>
   body {
     margin: 0;
-    background: #87ceeb; /* nebo */
+    background: #87ceeb;
     overflow: hidden;
   }
   canvas {
     display: block;
     margin: auto;
-    background: #a3d9a5; /* zelena zemlja */
+    background: #a3d9a5;
   }
   #score {
     color: #222;
@@ -79,9 +79,34 @@
   }
 
   function createStories() {
-    stories = [];
-    stories.push({ x: 850, y: 50, size: 20, dir: -1, speed: 1.5 });
-    stories.push({ x: 900, y: 300, size: 20, dir: -1, speed: 2 });
+    stories = [
+      { x: 850, y: 50, size: 20, dir: -1, speed: 1.5 },
+      { x: 900, y: 300, size: 20, dir: -1, speed: 2 }
+    ];
+  }
+
+  function updateStories() {
+    // Na svakih 20 mrvica povećaj brzinu postojećih priča
+    if (collected >= 20) {
+      stories.forEach(story => {
+        story.speed = 2.5;
+      });
+    }
+    if (collected >= 40) {
+      stories.forEach(story => {
+        story.speed = 3;
+      });
+      // Dodaj novu priču ako već nije dodata
+      if (stories.length < 3) {
+        stories.push({
+          x: canvas.width + 100,
+          y: Math.random() * (canvas.height - 50) + 25,
+          size: 20,
+          dir: -1,
+          speed: 3.5
+        });
+      }
+    }
   }
 
   function resetGame() {
@@ -106,6 +131,8 @@
         if (collected % 5 === 0) {
           createBreadcrumbs();
         }
+
+        updateStories(); // poziva se pri svakoj mrvici
         break;
       }
     }
@@ -134,7 +161,6 @@
   function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // CRTAJ POZADINU: sunce i oblake
     drawSun(ctx);
     clouds.forEach(c => drawCloud(ctx, c.x, c.y));
 
@@ -145,12 +171,11 @@
     if (pigeonX > canvas.width + 50) pigeonX = -50;
 
     drawPigeon(ctx, pigeonX, pigeonY, 2);
-
     breadcrumbs.forEach(b => drawBreadcrumb(ctx, b.x, b.y, 2));
 
     for (let story of stories) {
       story.x += story.dir * story.speed;
-      if (story.x < -50) story.x = canvas.width + 50;
+      if (story.x < -50) story.x = canvas.width + 100;
       drawStory(ctx, story.x, story.y, 1);
     }
 
