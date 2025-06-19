@@ -45,13 +45,7 @@
       <button class="btn" onclick="startGame('normal')">Normal</button>
       <button class="btn" onclick="startGame('hard')">Hard</button>
     </div>
-    <div id="shop">
-      <div>Buy Pigeon Skins (100 breadcrumbs each):</div>
-      <button class="btn" onclick="buySkin('default')">Default (Free)</button>
-      <button class="btn" onclick="buySkin('red')">Red</button>
-      <button class="btn" onclick="buySkin('green')">Green</button>
-      <button class="btn" onclick="buySkin('pink')">Pink</button>
-    </div>
+    <div id="shop"></div>
   </div>
 
   <div id="score">Breadcrumbs collected: 0</div>
@@ -66,8 +60,14 @@
     let pigeonSpeedY = 4;
     let pigeonY, pigeonX;
 
-    // Niz dostupnih skinova goluba za menjanje izgleda
+    // Definicija skinova i boja za telo i krila
     const skins = ['default', 'red', 'green', 'pink'];
+    const skinColors = {
+      default: { body: "gray", wing: "#555" },
+      red: { body: "#b22222", wing: "#800000" },
+      green: { body: "#228b22", wing: "#006400" },
+      pink: { body: "#ff69b4", wing: "#c71585" }
+    };
 
     let pigeonSkin = localStorage.getItem('pigeonSkin') || 'default';
     let ownedSkins = JSON.parse(localStorage.getItem('ownedSkins') || '["default"]');
@@ -94,13 +94,19 @@
 
     function toggleShop() {
       const shop = document.getElementById("shop");
-      shop.style.display = shop.style.display === "none" ? "block" : "none";
+      if (shop.style.display === "none" || shop.style.display === "") {
+        shop.style.display = "block";
+        updateShopButtons();
+      } else {
+        shop.style.display = "none";
+      }
     }
 
     function updateTotalDisplay() {
       document.getElementById("collectedTotal").textContent = `Collected breadcrumbs: ${totalCollected}`;
     }
 
+    // Iscrtavanje sunca i oblaka ostaju isti...
     function drawSun(ctx) {
       ctx.beginPath();
       ctx.arc(70, 70, 40, 0, Math.PI * 2);
@@ -117,20 +123,41 @@
       ctx.fill();
     }
 
+    // Izmena crtanja goluba da ima telo i krila po bojama skina
     function drawPigeon(ctx, x, y, scale) {
-      ctx.fillStyle = {
-        default: "gray",
-        red: "#b22222",
-        green: "#228b22",
-        pink: "#ff69b4"
-      }[pigeonSkin] || "gray";
-      // Head
+      const colors = skinColors[pigeonSkin] || skinColors.default;
+
+      // Krila
+      ctx.fillStyle = colors.wing;
+      ctx.beginPath();
+      ctx.ellipse(x - 8 * scale, y + 10 * scale, 7 * scale, 10 * scale, Math.PI / 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.ellipse(x + 8 * scale, y + 10 * scale, 7 * scale, 10 * scale, -Math.PI / 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Telo
+      ctx.fillStyle = colors.body;
+      ctx.beginPath();
+      ctx.arc(x, y + 10 * scale, 10 * scale, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Glava
       ctx.beginPath();
       ctx.arc(x, y - 5 * scale, 5 * scale, 0, Math.PI * 2);
       ctx.fill();
-      // Body
+
+      // Oko (belo)
+      ctx.fillStyle = "white";
       ctx.beginPath();
-      ctx.arc(x, y + 10 * scale, 10 * scale, 0, Math.PI * 2);
+      ctx.arc(x + 2 * scale, y - 6 * scale, 2 * scale, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Zenica (crna)
+      ctx.fillStyle = "black";
+      ctx.beginPath();
+      ctx.arc(x + 2 * scale, y - 6 * scale, 1 * scale, 0, Math.PI * 2);
       ctx.fill();
     }
 
@@ -196,6 +223,56 @@
       document.getElementById("timer").textContent = "Time left: 120";
     }
 
+    // Ova funkcija update-uje shop dugmad, zove se kad se otvori shop i nakon kupovine/koriscenja skina
+    function updateShopButtons() {
+      const shopDiv = document.getElementById("shop");
+      shopDiv.innerHTML = `<div>Buy Pigeon Skins (100 breadcrumbs each):</div>`;
+      skins.forEach(skin => {
+        const owned = ownedSkins.includes(skin);
+        const isCurrent = pigeonSkin === skin;
+        const btn = document.createElement("button");
+        btn.className = "btn";
+
+        if (owned) {
+          btn.textContent = isCurrent ? `${skin} (Using)` : `Use ${skin}`;
+          btn.disabled = isCurrent;
+          btn.onclick = () => {
+            pigeonSkin = skin;
+            localStorage.setItem('pigeonSkin', pigeonSkin);
+            updateShopButtons();
+          };
+        } else {
+          btn.textContent = `Buy ${skin}`;
+          btn.onclick = () => buySkin(skin);
+        }
+        shopDiv.appendChild(btn);
+      });
+    }
+
+    // Kupovina skina: skida 100 totalCollected i dodaje u ownedSkins
+    function buySkin(skin) {
+      if (ownedSkins.includes(skin)) {
+        alert("Već poseduješ ovaj skin.");
+        return;
+      }
+      if (totalCollected < 100) {
+        alert("Nemaš dovoljno mrvica za kupovinu ovog skina!");
+        return;
+      }
+      totalCollected -= 100;
+      localStorage.setItem("totalCollected", totalCollected);
+      updateTotalDisplay();
+
+      ownedSkins.push(skin);
+      localStorage.setItem("ownedSkins", JSON.stringify(ownedSkins));
+
+      // Automatski aktiviraj kupljeni skin
+      pigeonSkin = skin;
+      localStorage.setItem('pigeonSkin', pigeonSkin);
+
+      updateShopButtons();
+    }
+
     function checkCollision() {
       for (let i = 0; i < breadcrumbs.length; i++) {
         let b = breadcrumbs[i];
@@ -222,12 +299,15 @@
             // Kreiraj nove mrvice
             createBreadcrumbs();
 
-            // Promeni skin goluba na sledeći u nizu
-            let currentSkinIndex = skins.indexOf(pigeonSkin);
-            if (currentSkinIndex === -1) currentSkinIndex = 0;
-            else currentSkinIndex = (currentSkinIndex + 1) % skins.length;
-            pigeonSkin = skins[currentSkinIndex];
-            localStorage.setItem('pigeonSkin', pigeonSkin);
+            // Promeni skin goluba na sledeći u nizu (ali samo ako si na default skinu, ne da ti menja skin ako si kupio)
+            // Ovo možeš ukloniti ako ne želiš automatsku promenu skina
+            if (!ownedSkins.includes(pigeonSkin) || pigeonSkin === 'default') {
+              let currentSkinIndex = skins.indexOf(pigeonSkin);
+              if (currentSkinIndex === -1) currentSkinIndex = 0;
+              else currentSkinIndex = (currentSkinIndex + 1) % skins.length;
+              pigeonSkin = skins[currentSkinIndex];
+              localStorage.setItem('pigeonSkin', pigeonSkin);
+            }
           }
 
           updateStories();
