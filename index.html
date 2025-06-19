@@ -83,6 +83,7 @@
     let mode = "easy";
     let timer = 120;
     let timerInterval;
+    let animationId;
 
     function showDifficulty() {
       document.getElementById("difficulty").style.display = "block";
@@ -120,13 +121,15 @@
         green: "#228b22",
         pink: "#ff69b4"
       }[pigeonSkin] || "gray";
-      // Head
+      ctx.fillRect(x - 8 * scale, y - 6 * scale, 16 * scale, 12 * scale); // Body
+      ctx.fillRect(x + 4 * scale, y - 4 * scale, 6 * scale, 6 * scale); // Beak
+      ctx.fillStyle = "white";
       ctx.beginPath();
-      ctx.arc(x, y - 5 * scale, 5 * scale, 0, Math.PI * 2);
+      ctx.arc(x - 4 * scale, y - 2 * scale, 2 * scale, 0, Math.PI * 2); // Eye white
       ctx.fill();
-      // Body
+      ctx.fillStyle = "black";
       ctx.beginPath();
-      ctx.arc(x, y + 10 * scale, 10 * scale, 0, Math.PI * 2);
+      ctx.arc(x - 4 * scale, y - 2 * scale, scale, 0, Math.PI * 2); // Eye pupil
       ctx.fill();
     }
 
@@ -135,182 +138,22 @@
       ctx.fillRect(x - 10 * scale, y - 10 * scale, 20 * scale, 20 * scale);
     }
 
-    function createBreadcrumbs() {
-      breadcrumbs = [];
-      let startX = 200;
-      for (let i = 0; i < 5; i++) {
-        let x = startX + i * 120;
-        let y = Math.random() * (canvas.height - 40) + 20;
-        let type = "normal";
-        if (mode !== "easy") {
-          const rand = Math.random();
-          if (rand < 0.1) type = "bad";
-          else if (rand > 0.9) type = "gold";
-        }
-        breadcrumbs.push({ x, y, size: 10, type });
+    function buySkin(skin) {
+      if (skin === 'default' || ownedSkins.includes(skin)) {
+        pigeonSkin = skin;
+        localStorage.setItem('pigeonSkin', skin);
+        return;
       }
-    }
-
-    function createStories() {
-      stories = [];
-      let count = mode === "hard" ? 3 : 2;
-      for (let i = 0; i < count; i++) {
-        stories.push({
-          x: 800 + i * 100,
-          y: Math.random() * (canvas.height - 50) + 25,
-          size: 20,
-          dir: -1,
-          speed: 1.5 + i * 0.5
-        });
+      if (totalCollected >= 100) {
+        totalCollected -= 100;
+        ownedSkins.push(skin);
+        localStorage.setItem('pigeonSkin', skin);
+        localStorage.setItem('ownedSkins', JSON.stringify(ownedSkins));
+        localStorage.setItem('totalCollected', totalCollected);
+        updateTotalDisplay();
+      } else {
+        alert("Not enough breadcrumbs!");
       }
-    }
-
-    function updateStories() {
-      if (collected >= 20) stories.forEach(s => s.speed = 2.5);
-      if (collected >= 40) {
-        stories.forEach(s => s.speed = 3);
-        if (stories.length < 5) {
-          stories.push({
-            x: canvas.width + 100,
-            y: Math.random() * (canvas.height - 50) + 25,
-            size: 20,
-            dir: -1,
-            speed: 3.5
-          });
-        }
-      }
-    }
-
-    function resetGame() {
-      pigeonY = canvas.height / 2;
-      pigeonX = 50;
-      collected = 0;
-      timer = 120;
-      createBreadcrumbs();
-      createStories();
-      document.getElementById("score").textContent = "Breadcrumbs collected: 0";
-      document.getElementById("timer").textContent = "Time left: 120";
-    }
-
-    function checkCollision() {
-      for (let i = 0; i < breadcrumbs.length; i++) {
-        let b = breadcrumbs[i];
-        let distX = Math.abs(pigeonX - b.x);
-        let distY = Math.abs(pigeonY - b.y);
-        if (distX < 25 && distY < 25) {
-          if (b.type === "bad") collected = Math.max(0, collected - 3);
-          else if (b.type === "gold") {
-            collected += 5;
-            totalCollected += 5;
-          } else {
-            collected++;
-            totalCollected++;
-          }
-          localStorage.setItem("totalCollected", totalCollected);
-          updateTotalDisplay();
-
-          breadcrumbs.splice(i, 1);
-          document.getElementById("score").textContent = "Breadcrumbs collected: " + collected;
-
-          const remainingNormal = breadcrumbs.filter(b => b.type === "normal").length;
-          if (remainingNormal === 0) {
-            breadcrumbs = breadcrumbs.filter(b => b.type !== "bad");
-            createBreadcrumbs();
-          }
-
-          updateStories();
-          break;
-        }
-      }
-
-      for (let story of stories) {
-        let distX = Math.abs(pigeonX - story.x);
-        let distY = Math.abs(pigeonY - story.y);
-        if (distX < 25 && distY < 25) {
-          alert("Dotakao si priču! Igra se resetuje.");
-          clearInterval(timerInterval);
-          showMenu();
-          return;
-        }
-      }
-
-      if (mode !== "easy" && timer <= 0) {
-        alert("Vreme je isteklo!");
-        clearInterval(timerInterval);
-        showMenu();
-      }
-
-      if (mode === "hard" && collected >= 80) {
-        alert("Pobeda! Sakupio si 80 mrvica!");
-        clearInterval(timerInterval);
-        showMenu();
-      }
-    }
-
-    function showMenu() {
-      document.getElementById("menu").style.display = "block";
-      document.getElementById("score").style.display = "none";
-      document.getElementById("timer").style.display = "none";
-      cancelAnimationFrame(animationId);
-    }
-
-    function startGame(selectedMode) {
-      mode = selectedMode;
-      document.getElementById("menu").style.display = "none";
-      document.getElementById("score").style.display = "block";
-      document.getElementById("timer").style.display = mode === "easy" ? "none" : "block";
-      resetGame();
-      if (mode !== "easy") {
-        timerInterval = setInterval(() => {
-          timer--;
-          document.getElementById("timer").textContent = "Time left: " + timer;
-        }, 1000);
-      }
-      gameLoop();
-    }
-
-    window.addEventListener("keydown", (e) => {
-      if (e.key === "ArrowUp") upPressed = true;
-      if (e.key === "ArrowDown") downPressed = true;
-    });
-
-    window.addEventListener("keyup", (e) => {
-      if (e.key === "ArrowUp") upPressed = false;
-      if (e.key === "ArrowDown") downPressed = false;
-    });
-
-    let animationId;
-    function gameLoop() {
-      animationId = requestAnimationFrame(gameLoop);
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawSun(ctx);
-      clouds.forEach(c => drawCloud(ctx, c.x, c.y));
-
-      if (upPressed && pigeonY > 0) pigeonY -= pigeonSpeedY;
-      if (downPressed && pigeonY < canvas.height - 30) pigeonY += pigeonSpeedY;
-      pigeonX += pigeonSpeedX;
-      if (pigeonX > canvas.width + 50) pigeonX = -50;
-
-      drawPigeon(ctx, pigeonX, pigeonY, 2);
-      breadcrumbs.forEach(b => {
-        if (b.type === "bad") ctx.fillStyle = "black";
-        else if (b.type === "gold") ctx.fillStyle = "gold";
-        else ctx.fillStyle = "saddlebrown";
-        ctx.beginPath();
-        ctx.arc(b.x, b.y, b.size, 0, Math.PI * 2);
-        ctx.fill();
-      });
-
-      for (let story of stories) {
-        story.x += story.dir * story.speed;
-        if (story.x < -50) {
-          story.x = canvas.width + 100;
-          story.y = Math.random() * (canvas.height - 50) + 25;
-        }
-        drawStory(ctx, story.x, story.y, 1);
-      }
-
-      checkCollision();
     }
 
     updateTotalDisplay();
