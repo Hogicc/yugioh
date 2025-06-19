@@ -60,13 +60,17 @@
     let pigeonSpeedY = 4;
     let pigeonY, pigeonX;
 
-    // Definicija skinova i boja za telo i krila
-    const skins = ['default', 'red', 'green', 'pink'];
+    // Dodati novi skinovi (plavi, žuti, narandžasti, beli)
+    const skins = ['default', 'red', 'green', 'pink', 'blue', 'yellow', 'orange', 'white'];
     const skinColors = {
       default: { body: "gray", wing: "#555" },
       red: { body: "#b22222", wing: "#800000" },
       green: { body: "#228b22", wing: "#006400" },
-      pink: { body: "#ff69b4", wing: "#c71585" }
+      pink: { body: "#ff69b4", wing: "#c71585" },
+      blue: { body: "#1e90ff", wing: "#104e8b" },
+      yellow: { body: "#ffd700", wing: "#b8860b" },
+      orange: { body: "#ff8c00", wing: "#cc7000" },
+      white: { body: "#f8f8ff", wing: "#b0c4de" }
     };
 
     let pigeonSkin = localStorage.getItem('pigeonSkin') || 'default';
@@ -106,7 +110,6 @@
       document.getElementById("collectedTotal").textContent = `Collected breadcrumbs: ${totalCollected}`;
     }
 
-    // Iscrtavanje sunca i oblaka ostaju isti...
     function drawSun(ctx) {
       ctx.beginPath();
       ctx.arc(70, 70, 40, 0, Math.PI * 2);
@@ -123,7 +126,6 @@
       ctx.fill();
     }
 
-    // Izmena crtanja goluba da ima telo i krila po bojama skina
     function drawPigeon(ctx, x, y, scale) {
       const colors = skinColors[pigeonSkin] || skinColors.default;
 
@@ -223,7 +225,6 @@
       document.getElementById("timer").textContent = "Time left: 120";
     }
 
-    // Ova funkcija update-uje shop dugmad, zove se kad se otvori shop i nakon kupovine/koriscenja skina
     function updateShopButtons() {
       const shopDiv = document.getElementById("shop");
       shopDiv.innerHTML = `<div>Buy Pigeon Skins (100 breadcrumbs each):</div>`;
@@ -249,7 +250,6 @@
       });
     }
 
-    // Kupovina skina: skida 100 totalCollected i dodaje u ownedSkins
     function buySkin(skin) {
       if (ownedSkins.includes(skin)) {
         alert("Već poseduješ ovaj skin.");
@@ -266,7 +266,7 @@
       ownedSkins.push(skin);
       localStorage.setItem("ownedSkins", JSON.stringify(ownedSkins));
 
-      // Automatski aktiviraj kupljeni skin
+      // Automatski aktiviraj skin nakon kupovine
       pigeonSkin = skin;
       localStorage.setItem('pigeonSkin', pigeonSkin);
 
@@ -293,21 +293,10 @@
           breadcrumbs.splice(i, 1);
           document.getElementById("score").textContent = "Breadcrumbs collected: " + collected;
 
-          // Provera da li su sve obične mrvice skupljene
+          // Kada se sve obične mrvice pokupе, prave se nove (bez automatske promene skina)
           const remainingNormal = breadcrumbs.filter(b => b.type === "normal").length;
           if (remainingNormal === 0) {
-            // Kreiraj nove mrvice
             createBreadcrumbs();
-
-            // Promeni skin goluba na sledeći u nizu (ali samo ako si na default skinu, ne da ti menja skin ako si kupio)
-            // Ovo možeš ukloniti ako ne želiš automatsku promenu skina
-            if (!ownedSkins.includes(pigeonSkin) || pigeonSkin === 'default') {
-              let currentSkinIndex = skins.indexOf(pigeonSkin);
-              if (currentSkinIndex === -1) currentSkinIndex = 0;
-              else currentSkinIndex = (currentSkinIndex + 1) % skins.length;
-              pigeonSkin = skins[currentSkinIndex];
-              localStorage.setItem('pigeonSkin', pigeonSkin);
-            }
           }
 
           updateStories();
