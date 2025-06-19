@@ -15,7 +15,7 @@
       margin: auto;
       background: #a3d9a5;
     }
-    #menu, #score, #timer, #totalBread {
+    #menu, #score, #timer, #currency {
       text-align: center;
       margin: 10px;
     }
@@ -25,7 +25,7 @@
       margin: 5px;
       cursor: pointer;
     }
-    #score, #timer, #totalBread {
+    #score, #timer {
       display: none;
       font-size: 24px;
       color: #222;
@@ -34,7 +34,7 @@
 </head>
 <body>
   <div id="menu">
-    <div id="totalBread">Collected breadcrumbs: 0</div>
+    <div id="currency">Collected breadcrumbs: 0</div>
     <button class="btn" onclick="showDifficulty()">Play</button>
     <div id="difficulty" style="display:none;">
       <button class="btn" onclick="startGame('easy')">Easy</button>
@@ -177,34 +177,26 @@
         let distX = Math.abs(pigeonX - story.x);
         let distY = Math.abs(pigeonY - story.y);
         if (distX < 25 && distY < 25) {
-          totalCollected += collected;
-          updateTotalDisplay();
-          alert("Dotakao si priču! Igra se resetuje.");
-          clearInterval(timerInterval);
-          showMenu();
+          endGame();
           return;
         }
       }
 
       if (mode !== "easy" && timer <= 0) {
-        totalCollected += collected;
-        updateTotalDisplay();
-        alert("Vreme je isteklo!");
-        clearInterval(timerInterval);
-        showMenu();
+        endGame();
       }
 
       if (mode === "hard" && collected >= 80) {
-        totalCollected += collected;
-        updateTotalDisplay();
         alert("Pobeda! Sakupio si 80 mrvica!");
-        clearInterval(timerInterval);
-        showMenu();
+        endGame();
       }
     }
 
-    function updateTotalDisplay() {
-      document.getElementById("totalBread").textContent = "Collected breadcrumbs: " + totalCollected;
+    function endGame() {
+      totalCollected += collected;
+      document.getElementById("currency").textContent = "Collected breadcrumbs: " + totalCollected;
+      clearInterval(timerInterval);
+      showMenu();
     }
 
     function showMenu() {
