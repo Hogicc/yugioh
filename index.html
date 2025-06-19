@@ -6,13 +6,13 @@
 <style>
   body {
     margin: 0;
-    background: #87ceeb;
+    background: #87ceeb; /* nebo */
     overflow: hidden;
   }
   canvas {
     display: block;
     margin: auto;
-    background: #a3d9a5;
+    background: #a3d9a5; /* zelena zemlja */
   }
   #score {
     color: #222;
@@ -45,13 +45,36 @@
 
   let stories = [];
 
+  const clouds = [
+    { x: 100, y: 60 },
+    { x: 300, y: 90 },
+    { x: 550, y: 40 },
+    { x: 700, y: 100 }
+  ];
+
+  function drawSun(ctx) {
+    ctx.beginPath();
+    ctx.arc(70, 70, 40, 0, Math.PI * 2, true);
+    ctx.fillStyle = "yellow";
+    ctx.fill();
+  }
+
+  function drawCloud(ctx, x, y) {
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.arc(x, y, 20, 0, Math.PI * 2);
+    ctx.arc(x + 25, y + 5, 20, 0, Math.PI * 2);
+    ctx.arc(x + 50, y, 20, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
   function createBreadcrumbs() {
     breadcrumbs = [];
     let startX = 200;
     for (let i = 0; i < 5; i++) {
       let x = startX + i * 120;
-      let y = Math.random() * (canvas.height - 40) + 20; // više prostora zbog veće veličine
-      breadcrumbs.push({ x, y, size: 20 }); // veličina 20 umesto 10
+      let y = Math.random() * (canvas.height - 40) + 20;
+      breadcrumbs.push({ x, y, size: 20 });
     }
   }
 
@@ -75,7 +98,7 @@
       let b = breadcrumbs[i];
       let distX = Math.abs(pigeonX - b.x);
       let distY = Math.abs(pigeonY - b.y);
-      if (distX < 35 && distY < 35) {  // povećana distanca za koliziju zbog većih mrvica
+      if (distX < 35 && distY < 35) {
         breadcrumbs.splice(i, 1);
         collected++;
         document.getElementById("score").textContent = "Breadcrumbs collected: " + collected;
@@ -111,15 +134,19 @@
   function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // CRTAJ POZADINU: sunce i oblake
+    drawSun(ctx);
+    clouds.forEach(c => drawCloud(ctx, c.x, c.y));
+
     if (upPressed && pigeonY > 0) pigeonY -= pigeonSpeedY;
     if (downPressed && pigeonY < canvas.height - 30) pigeonY += pigeonSpeedY;
 
     pigeonX += pigeonSpeedX;
     if (pigeonX > canvas.width + 50) pigeonX = -50;
 
-    drawPigeon(ctx, pigeonX, pigeonY, 2); // uvećan golub (scale 2)
+    drawPigeon(ctx, pigeonX, pigeonY, 2);
 
-    breadcrumbs.forEach(b => drawBreadcrumb(ctx, b.x, b.y, 2)); // veće mrvice, skala 2
+    breadcrumbs.forEach(b => drawBreadcrumb(ctx, b.x, b.y, 2));
 
     for (let story of stories) {
       story.x += story.dir * story.speed;
