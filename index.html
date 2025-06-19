@@ -15,7 +15,7 @@
       margin: auto;
       background: #a3d9a5;
     }
-    #menu, #score, #timer {
+    #menu, #score, #timer, #totalBreadcrumbsDisplay {
       text-align: center;
       margin: 10px;
     }
@@ -30,16 +30,31 @@
       font-size: 24px;
       color: #222;
     }
+    #shop {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .skin-btn {
+      margin: 5px;
+      padding: 8px 16px;
+      font-size: 16px;
+    }
   </style>
 </head>
 <body>
   <div id="menu">
-    <p id="totalDisplay">Collected breadcrumbs: 0</p>
+    <div id="totalBreadcrumbsDisplay">Collected breadcrumbs: 0</div>
     <button class="btn" onclick="showDifficulty()">Play</button>
     <div id="difficulty" style="display:none;">
       <button class="btn" onclick="startGame('easy')">Easy</button>
       <button class="btn" onclick="startGame('normal')">Normal</button>
       <button class="btn" onclick="startGame('hard')">Hard</button>
+    </div>
+    <div id="shop">
+      <h3>Shop - Buy Pigeon Skins (100 breadcrumbs)</h3>
+      <button class="skin-btn" onclick="buySkin('red')">Red Pigeon</button>
+      <button class="skin-btn" onclick="buySkin('green')">Green Pigeon</button>
+      <button class="skin-btn" onclick="buySkin('pink')">Pink Pigeon</button>
     </div>
   </div>
 
@@ -61,7 +76,7 @@
 
     let breadcrumbs = [];
     let collected = 0;
-    let totalCollected = parseInt(localStorage.getItem("totalCollected")) || 0;
+    let totalBreadcrumbs = parseInt(localStorage.getItem("totalBreadcrumbs")) || 0;
     let stories = [];
     let clouds = [
       { x: 100, y: 60 }, { x: 300, y: 90 },
@@ -71,6 +86,9 @@
     let mode = "easy";
     let timer = 120;
     let timerInterval;
+    let selectedSkin = localStorage.getItem("pigeonSkin") || "default";
+
+    document.getElementById("totalBreadcrumbsDisplay").textContent = "Collected breadcrumbs: " + totalBreadcrumbs;
 
     function showDifficulty() {
       document.getElementById("difficulty").style.display = "block";
@@ -89,6 +107,13 @@
       ctx.arc(x, y, 20, 0, Math.PI * 2);
       ctx.arc(x + 25, y + 5, 20, 0, Math.PI * 2);
       ctx.arc(x + 50, y, 20, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function drawPigeon(ctx, x, y, scale) {
+      ctx.fillStyle = selectedSkin === "red" ? "red" : selectedSkin === "green" ? "green" : selectedSkin === "pink" ? "pink" : "gray";
+      ctx.beginPath();
+      ctx.arc(x, y, 15 * scale, 0, Math.PI * 2);
       ctx.fill();
     }
 
@@ -155,17 +180,9 @@
         let distX = Math.abs(pigeonX - b.x);
         let distY = Math.abs(pigeonY - b.y);
         if (distX < 25 && distY < 25) {
-          if (b.type === "bad") {
-            collected = Math.max(0, collected - 3);
-          } else if (b.type === "gold") {
-            collected += 5;
-            totalCollected += 5;
-            localStorage.setItem("totalCollected", totalCollected);
-          } else {
-            collected++;
-            totalCollected++;
-            localStorage.setItem("totalCollected", totalCollected);
-          }
+          if (b.type === "bad") collected = Math.max(0, collected - 3);
+          else if (b.type === "gold") collected += 5;
+          else collected++;
 
           breadcrumbs.splice(i, 1);
           document.getElementById("score").textContent = "Breadcrumbs collected: " + collected;
@@ -185,6 +202,9 @@
         let distX = Math.abs(pigeonX - story.x);
         let distY = Math.abs(pigeonY - story.y);
         if (distX < 25 && distY < 25) {
+          totalBreadcrumbs += collected;
+          localStorage.setItem("totalBreadcrumbs", totalBreadcrumbs);
+          document.getElementById("totalBreadcrumbsDisplay").textContent = "Collected breadcrumbs: " + totalBreadcrumbs;
           alert("Dotakao si priču! Igra se resetuje.");
           clearInterval(timerInterval);
           showMenu();
@@ -193,12 +213,18 @@
       }
 
       if (mode !== "easy" && timer <= 0) {
+        totalBreadcrumbs += collected;
+        localStorage.setItem("totalBreadcrumbs", totalBreadcrumbs);
+        document.getElementById("totalBreadcrumbsDisplay").textContent = "Collected breadcrumbs: " + totalBreadcrumbs;
         alert("Vreme je isteklo!");
         clearInterval(timerInterval);
         showMenu();
       }
 
       if (mode === "hard" && collected >= 80) {
+        totalBreadcrumbs += collected;
+        localStorage.setItem("totalBreadcrumbs", totalBreadcrumbs);
+        document.getElementById("totalBreadcrumbsDisplay").textContent = "Collected breadcrumbs: " + totalBreadcrumbs;
         alert("Pobeda! Sakupio si 80 mrvica!");
         clearInterval(timerInterval);
         showMenu();
@@ -209,7 +235,6 @@
       document.getElementById("menu").style.display = "block";
       document.getElementById("score").style.display = "none";
       document.getElementById("timer").style.display = "none";
-      document.getElementById("totalDisplay").textContent = "Collected breadcrumbs: " + totalCollected;
       cancelAnimationFrame(animationId);
     }
 
@@ -226,6 +251,19 @@
         }, 1000);
       }
       gameLoop();
+    }
+
+    function buySkin(color) {
+      if (totalBreadcrumbs >= 100) {
+        totalBreadcrumbs -= 100;
+        selectedSkin = color;
+        localStorage.setItem("totalBreadcrumbs", totalBreadcrumbs);
+        localStorage.setItem("pigeonSkin", selectedSkin);
+        document.getElementById("totalBreadcrumbsDisplay").textContent = "Collected breadcrumbs: " + totalBreadcrumbs;
+        alert("Kupio si " + color + " skin!");
+      } else {
+        alert("Nemaš dovoljno mrvica!");
+      }
     }
 
     window.addEventListener("keydown", (e) => {
