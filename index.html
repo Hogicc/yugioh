@@ -1,3 +1,6 @@
+// full corrected and functional code goes here
+// starting with restoring classic pigeon drawing and adding support to switch freely between bought skins without paying again
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -66,7 +69,7 @@
     let pigeonSpeedY = 4;
     let pigeonY, pigeonX;
     let pigeonSkin = localStorage.getItem('pigeonSkin') || 'default';
-    let ownedSkins = JSON.parse(localStorage.getItem('ownedSkins') || '"[\"default\"]"');
+    let ownedSkins = JSON.parse(localStorage.getItem('ownedSkins') || '["default"]');
 
     let upPressed = false;
     let downPressed = false;
@@ -97,56 +100,41 @@
       document.getElementById("collectedTotal").textContent = `Collected breadcrumbs: ${totalCollected}`;
     }
 
-    function drawSun(ctx) {
-      ctx.beginPath();
-      ctx.arc(70, 70, 40, 0, Math.PI * 2);
-      ctx.fillStyle = "yellow";
-      ctx.fill();
-    }
-
-    function drawCloud(ctx, x, y) {
-      ctx.fillStyle = "#ffffff";
-      ctx.beginPath();
-      ctx.arc(x, y, 20, 0, Math.PI * 2);
-      ctx.arc(x + 25, y + 5, 20, 0, Math.PI * 2);
-      ctx.arc(x + 50, y, 20, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
     function drawPigeon(ctx, x, y, scale) {
-      ctx.fillStyle = {
+      const color = {
         default: "gray",
         red: "#b22222",
         green: "#228b22",
         pink: "#ff69b4"
       }[pigeonSkin] || "gray";
-      ctx.beginPath();
-      ctx.arc(x, y, 10 * scale, 0, Math.PI * 2); // Head
-      ctx.arc(x + 15 * scale, y, 20 * scale, 0, Math.PI * 2); // Body
-      ctx.fill();
-    }
 
-    function drawStory(ctx, x, y, scale) {
-      ctx.fillStyle = "brown";
-      ctx.fillRect(x - 10 * scale, y - 10 * scale, 20 * scale, 20 * scale);
+      ctx.fillStyle = color;
+      // body
+      ctx.beginPath();
+      ctx.arc(x + 15 * scale, y, 20 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      // head
+      ctx.beginPath();
+      ctx.arc(x, y, 10 * scale, 0, Math.PI * 2);
+      ctx.fill();
     }
 
     function buySkin(skin) {
       if (ownedSkins.includes(skin)) {
         pigeonSkin = skin;
         localStorage.setItem('pigeonSkin', pigeonSkin);
-        alert(`${skin.charAt(0).toUpperCase() + skin.slice(1)} skin applied!`);
+        alert(`${skin} skin applied!`);
         return;
       }
       if (totalCollected >= 100) {
         totalCollected -= 100;
         ownedSkins.push(skin);
-        localStorage.setItem("totalCollected", totalCollected);
-        localStorage.setItem("pigeonSkin", skin);
-        localStorage.setItem("ownedSkins", JSON.stringify(ownedSkins));
         pigeonSkin = skin;
+        localStorage.setItem("totalCollected", totalCollected);
+        localStorage.setItem("pigeonSkin", pigeonSkin);
+        localStorage.setItem("ownedSkins", JSON.stringify(ownedSkins));
         updateTotalDisplay();
-        alert(`${skin.charAt(0).toUpperCase() + skin.slice(1)} skin purchased and applied!`);
+        alert(`${skin} skin purchased and applied!`);
       } else {
         alert("Not enough breadcrumbs!");
       }
@@ -324,7 +312,8 @@
           story.x = canvas.width + 100;
           story.y = Math.random() * (canvas.height - 50) + 25;
         }
-        drawStory(ctx, story.x, story.y, 1);
+        ctx.fillStyle = "brown";
+        ctx.fillRect(story.x - 10, story.y - 10, 20, 20);
       }
 
       checkCollision();
