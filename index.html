@@ -60,7 +60,6 @@
     let pigeonSpeedY = 4;
     let pigeonY, pigeonX;
 
-    // Dodati novi skinovi (plavi, žuti, narandžasti, beli)
     const skins = ['default', 'red', 'green', 'pink', 'blue', 'yellow', 'orange', 'white'];
     const skinColors = {
       default: { body: "gray", wing: "#555" },
@@ -76,6 +75,8 @@
     let pigeonSkin = localStorage.getItem('pigeonSkin') || 'default';
     let ownedSkins = JSON.parse(localStorage.getItem('ownedSkins') || '["default"]');
 
+    let nightTheme = JSON.parse(localStorage.getItem('nightTheme') || 'false');
+
     let upPressed = false;
     let downPressed = false;
 
@@ -83,6 +84,7 @@
     let collected = 0;
     let totalCollected = parseInt(localStorage.getItem("totalCollected")) || 0;
     let stories = [];
+    let stars = [];
     let clouds = [
       { x: 100, y: 60 }, { x: 300, y: 90 },
       { x: 550, y: 40 }, { x: 700, y: 100 }
@@ -110,15 +112,29 @@
       document.getElementById("collectedTotal").textContent = `Collected breadcrumbs: ${totalCollected}`;
     }
 
-    function drawSun(ctx) {
-      ctx.beginPath();
-      ctx.arc(70, 70, 40, 0, Math.PI * 2);
-      ctx.fillStyle = "yellow";
-      ctx.fill();
+    function drawSunOrMoon(ctx) {
+      if (nightTheme) {
+        // Moon
+        ctx.beginPath();
+        ctx.arc(70, 70, 30, 0, Math.PI * 2);
+        ctx.fillStyle = "#ccc";
+        ctx.fill();
+        // Stars
+        stars.forEach(star => {
+          ctx.fillStyle = "white";
+          ctx.fillRect(star.x, star.y, 2, 2);
+        });
+      } else {
+        // Sun
+        ctx.beginPath();
+        ctx.arc(70, 70, 40, 0, Math.PI * 2);
+        ctx.fillStyle = "yellow";
+        ctx.fill();
+      }
     }
 
     function drawCloud(ctx, x, y) {
-      ctx.fillStyle = "#ffffff";
+      ctx.fillStyle = nightTheme ? "#444" : "#ffffff";
       ctx.beginPath();
       ctx.arc(x, y, 20, 0, Math.PI * 2);
       ctx.arc(x + 25, y + 5, 20, 0, Math.PI * 2);
@@ -128,35 +144,24 @@
 
     function drawPigeon(ctx, x, y, scale) {
       const colors = skinColors[pigeonSkin] || skinColors.default;
-
-      // Krila
       ctx.fillStyle = colors.wing;
       ctx.beginPath();
       ctx.ellipse(x - 8 * scale, y + 10 * scale, 7 * scale, 10 * scale, Math.PI / 4, 0, Math.PI * 2);
       ctx.fill();
-
       ctx.beginPath();
       ctx.ellipse(x + 8 * scale, y + 10 * scale, 7 * scale, 10 * scale, -Math.PI / 4, 0, Math.PI * 2);
       ctx.fill();
-
-      // Telo
       ctx.fillStyle = colors.body;
       ctx.beginPath();
       ctx.arc(x, y + 10 * scale, 10 * scale, 0, Math.PI * 2);
       ctx.fill();
-
-      // Glava
       ctx.beginPath();
       ctx.arc(x, y - 5 * scale, 5 * scale, 0, Math.PI * 2);
       ctx.fill();
-
-      // Oko (belo)
       ctx.fillStyle = "white";
       ctx.beginPath();
       ctx.arc(x + 2 * scale, y - 6 * scale, 2 * scale, 0, Math.PI * 2);
       ctx.fill();
-
-      // Zenica (crna)
       ctx.fillStyle = "black";
       ctx.beginPath();
       ctx.arc(x + 2 * scale, y - 6 * scale, 1 * scale, 0, Math.PI * 2);
@@ -184,45 +189,14 @@
       }
     }
 
-    function createStories() {
-      stories = [];
-      let count = mode === "hard" ? 3 : 2;
-      for (let i = 0; i < count; i++) {
-        stories.push({
-          x: 800 + i * 100,
-          y: Math.random() * (canvas.height - 50) + 25,
-          size: 20,
-          dir: -1,
-          speed: 1.5 + i * 0.5
+    function createStars() {
+      stars = [];
+      for (let i = 0; i < 50; i++) {
+        stars.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height
         });
       }
-    }
-
-    function updateStories() {
-      if (collected >= 20) stories.forEach(s => s.speed = 2.5);
-      if (collected >= 40) {
-        stories.forEach(s => s.speed = 3);
-        if (stories.length < 5) {
-          stories.push({
-            x: canvas.width + 100,
-            y: Math.random() * (canvas.height - 50) + 25,
-            size: 20,
-            dir: -1,
-            speed: 3.5
-          });
-        }
-      }
-    }
-
-    function resetGame() {
-      pigeonY = canvas.height / 2;
-      pigeonX = 50;
-      collected = 0;
-      timer = 120;
-      createBreadcrumbs();
-      createStories();
-      document.getElementById("score").textContent = "Breadcrumbs collected: 0";
-      document.getElementById("timer").textContent = "Time left: 120";
     }
 
     function updateShopButtons() {
@@ -248,29 +222,58 @@
         }
         shopDiv.appendChild(btn);
       });
+
+      const themeBtn = document.createElement("button");
+      themeBtn.className = "btn";
+      if (nightTheme) {
+        themeBtn.textContent = "Night Theme (Active)";
+        themeBtn.disabled = true;
+      } else {
+        themeBtn.textContent = "Buy Night Theme (500)";
+        themeBtn.onclick = () => {
+          if (totalCollected >= 500) {
+            totalCollected -= 500;
+            nightTheme = true;
+            localStorage.setItem("nightTheme", "true");
+            localStorage.setItem("totalCollected", totalCollected);
+            updateTotalDisplay();
+            createStars();
+            updateShopButtons();
+          } else {
+            alert("Nemaš dovoljno mrvica!");
+          }
+        };
+      }
+      shopDiv.appendChild(document.createElement("br"));
+      shopDiv.appendChild(themeBtn);
     }
 
     function buySkin(skin) {
-      if (ownedSkins.includes(skin)) {
-        alert("Već poseduješ ovaj skin.");
-        return;
-      }
+      if (ownedSkins.includes(skin)) return;
       if (totalCollected < 100) {
-        alert("Nemaš dovoljno mrvica za kupovinu ovog skina!");
+        alert("Nemaš dovoljno mrvica za taj skin!");
         return;
       }
       totalCollected -= 100;
+      ownedSkins.push(skin);
+      pigeonSkin = skin;
+      localStorage.setItem("ownedSkins", JSON.stringify(ownedSkins));
+      localStorage.setItem("pigeonSkin", pigeonSkin);
       localStorage.setItem("totalCollected", totalCollected);
       updateTotalDisplay();
-
-      ownedSkins.push(skin);
-      localStorage.setItem("ownedSkins", JSON.stringify(ownedSkins));
-
-      // Automatski aktiviraj skin nakon kupovine
-      pigeonSkin = skin;
-      localStorage.setItem('pigeonSkin', pigeonSkin);
-
       updateShopButtons();
+    }
+
+    function resetGame() {
+      pigeonY = canvas.height / 2;
+      pigeonX = 50;
+      collected = 0;
+      timer = 120;
+      createBreadcrumbs();
+      createStories();
+      if (nightTheme) createStars();
+      document.getElementById("score").textContent = "Breadcrumbs collected: 0";
+      document.getElementById("timer").textContent = "Time left: 120";
     }
 
     function checkCollision() {
@@ -289,42 +292,12 @@
           }
           localStorage.setItem("totalCollected", totalCollected);
           updateTotalDisplay();
-
           breadcrumbs.splice(i, 1);
           document.getElementById("score").textContent = "Breadcrumbs collected: " + collected;
-
-          // Kada se sve obične mrvice pokupе, prave se nove (bez automatske promene skina)
           const remainingNormal = breadcrumbs.filter(b => b.type === "normal").length;
-          if (remainingNormal === 0) {
-            createBreadcrumbs();
-          }
-
-          updateStories();
+          if (remainingNormal === 0) createBreadcrumbs();
           break;
         }
-      }
-
-      for (let story of stories) {
-        let distX = Math.abs(pigeonX - story.x);
-        let distY = Math.abs(pigeonY - story.y);
-        if (distX < 25 && distY < 25) {
-          alert("Dotakao si priču! Igra se resetuje.");
-          clearInterval(timerInterval);
-          showMenu();
-          return;
-        }
-      }
-
-      if (mode !== "easy" && timer <= 0) {
-        alert("Vreme je isteklo!");
-        clearInterval(timerInterval);
-        showMenu();
-      }
-
-      if (mode === "hard" && collected >= 80) {
-        alert("Pobeda! Sakupio si 80 mrvica!");
-        clearInterval(timerInterval);
-        showMenu();
       }
     }
 
@@ -350,12 +323,11 @@
       gameLoop();
     }
 
-    window.addEventListener("keydown", (e) => {
+    window.addEventListener("keydown", e => {
       if (e.key === "ArrowUp") upPressed = true;
       if (e.key === "ArrowDown") downPressed = true;
     });
-
-    window.addEventListener("keyup", (e) => {
+    window.addEventListener("keyup", e => {
       if (e.key === "ArrowUp") upPressed = false;
       if (e.key === "ArrowDown") downPressed = false;
     });
@@ -363,8 +335,10 @@
     let animationId;
     function gameLoop() {
       animationId = requestAnimationFrame(gameLoop);
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawSun(ctx);
+      ctx.fillStyle = nightTheme ? "#000" : "#a3d9a5";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      drawSunOrMoon(ctx);
       clouds.forEach(c => drawCloud(ctx, c.x, c.y));
 
       if (upPressed && pigeonY > 0) pigeonY -= pigeonSpeedY;
@@ -373,10 +347,11 @@
       if (pigeonX > canvas.width + 50) pigeonX = -50;
 
       drawPigeon(ctx, pigeonX, pigeonY, 2);
+
       breadcrumbs.forEach(b => {
         if (b.type === "bad") ctx.fillStyle = "black";
         else if (b.type === "gold") ctx.fillStyle = "gold";
-        else ctx.fillStyle = "saddlebrown";
+        else ctx.fillStyle = nightTheme ? "deepskyblue" : "saddlebrown";
         ctx.beginPath();
         ctx.arc(b.x, b.y, b.size, 0, Math.PI * 2);
         ctx.fill();
